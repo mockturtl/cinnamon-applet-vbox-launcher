@@ -36,12 +36,12 @@ MyApplet.prototype = {
 			this.set_applet_icon_name("virtualbox");
 			
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
-            this.menu = new MyMenu(this, orientation);
-            this.menuManager.addMenu(this.menu);
-            
-            this.loadSettings();
-            this.updateMenu();
-            this.buildContextMenu();
+			this.menu = new MyMenu(this, orientation);
+			this.menuManager.addMenu(this.menu);
+
+			this.loadSettings();
+			this.updateMenu();
+			this.buildContextMenu();
 		}
 		catch (e) {
 			global.logError(e);
@@ -103,8 +103,8 @@ MyApplet.prototype = {
 	buildContextMenu: function() {
 		this.switchAutoUpdate = new PopupMenu.PopupSwitchMenuItem("Auto update (slow)");
 		this.switchAutoUpdate.setToggleState(this.settings.autoUpdate);
-        this.switchAutoUpdate.connect('toggled', Lang.bind(this, this.onSwitchAutoUpdateClick));
-        this._applet_context_menu.addMenuItem(this.switchAutoUpdate);
+		this.switchAutoUpdate.connect('toggled', Lang.bind(this, this.onSwitchAutoUpdateClick));
+		this._applet_context_menu.addMenuItem(this.switchAutoUpdate);
 	},
 	
 	onSwitchAutoUpdateClick: function(item) {
