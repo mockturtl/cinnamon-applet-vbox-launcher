@@ -15,7 +15,7 @@ Installation
 Usage
 -----
 
-The list of virtual machines is updated every time Cinnamon starts. If you add/remove/edit a virtual machine, you can manually update the launcher clicking on "Update list".
+The list of virtual machines is updated every time Cinnamon starts. You can choose if update it again every time the applet is clicked or to manually update  clicking on "Update list". The options menu is reachable right-clicking the applet.
 
 
 Test
