@@ -1,11 +1,13 @@
 const Applet = imports.ui.applet;
 const Cinnamon = imports.gi.Cinnamon;
 const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
 const Main = imports.ui.main;
+const SettingsFile = GLib.build_filenamev([global.userdatadir, 'applets/vboxlauncher@adec/settings.json']);
 
 function MyMenu(launcher, orientation) {
     this._init(launcher, orientation);
@@ -37,7 +39,9 @@ MyApplet.prototype = {
             this.menu = new MyMenu(this, orientation);
             this.menuManager.addMenu(this.menu);
             
+            this.loadSettings();
             this.updateMenu();
+            this.buildContextMenu();
 		}
 		catch (e) {
 			global.logError(e);
@@ -73,10 +77,12 @@ MyApplet.prototype = {
 			this.menu.addMenuItem(new PopupMenu.PopupMenuItem("ERROR. Make sure Virtualbox is installed.", { reactive: false }));
 		}
 		
-		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-		let menuitemUpdate = new PopupMenu.PopupMenuItem("Update list");
-		menuitemUpdate.connect('activate', Lang.bind(this, this.updateMenu));
-		this.menu.addMenuItem(menuitemUpdate);
+		if(!this.settings.autoUpdate) {
+			this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+			let menuitemUpdate = new PopupMenu.PopupMenuItem("Update list");
+			menuitemUpdate.connect('activate', Lang.bind(this, this.updateMenu));
+			this.menu.addMenuItem(menuitemUpdate);
+		}
 	},
 	
 	startVM: function(id) {
@@ -88,7 +94,43 @@ MyApplet.prototype = {
 	},
 
 	on_applet_clicked: function(event) {
+		if(this.settings.autoUpdate && !this.menu.isOpen) {
+			this.updateMenu();
+		}
 		this.menu.toggle();
+	},
+	
+	buildContextMenu: function() {
+		this.switchAutoUpdate = new PopupMenu.PopupSwitchMenuItem("Auto update (slow)");
+		this.switchAutoUpdate.setToggleState(this.settings.autoUpdate);
+        this.switchAutoUpdate.connect('toggled', Lang.bind(this, this.onSwitchAutoUpdateClick));
+        this._applet_context_menu.addMenuItem(this.switchAutoUpdate);
+	},
+	
+	onSwitchAutoUpdateClick: function(item) {
+		this.settings.autoUpdate = item.state;
+		if(!item.state) {
+			this.updateMenu(); // Needed to make update button reappear if setting switched to off
+		}
+		this.saveSettings();
+	},
+	
+	loadSettings: function() {
+		try {
+			this.settings = JSON.parse(Cinnamon.get_file_contents_utf8_sync(SettingsFile));
+		} catch(e) {
+			global.logError(e);
+			global.logError("Settings file not found. Using default values.");
+			this.settings = JSON.parse("{\"autoUpdate\":false}");
+		}
+	},
+	
+	saveSettings: function() {
+		let file = Gio.file_new_for_path(SettingsFile);
+		let outputFile = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
+		let out = Gio.BufferedOutputStream.new_sized(outputFile, 1024);
+		Cinnamon.write_string_to_stream(out, JSON.stringify(this.settings));
+		out.close(null);
 	}
 };
 

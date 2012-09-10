@@ -21,4 +21,4 @@ The list of virtual machines is updated every time Cinnamon starts. If you add/r
 Test
 ----
 
-The script was tested with Cinnamon 1.3.1 on Mint 12 and Ubuntu 11.10.
+The script was tested with Cinnamon 1.4 on Mint 13.
