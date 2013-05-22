@@ -4,6 +4,9 @@ Vbox Launcher applet
 Simple Cinnamon applet to launch Virtualbox virtual machines directly from the panel.
 
 
+NOTICE: This project has been discontinued. Any developer who wants to fork it and continue development is welcome!
+
+
 Installation
 ------------
 
