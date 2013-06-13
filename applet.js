@@ -9,6 +9,11 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const SettingsFile = GLib.build_filenamev([global.userdatadir, 'applets/vboxlauncher@adec/settings.json']);
 
+const ICON = "virtualbox";
+const CMD = "virtualbox";
+const CMD_VM = CMD + " --startvm ";
+const CMD_LIST = "vboxmanage list vms";
+
 
 function MyApplet(metadata, orientation, panelHeight, instanceId) {
 	this._init(orientation, panelHeight, instanceId);
@@ -21,7 +26,7 @@ MyApplet.prototype = {
         Applet.IconApplet.prototype._init.call(this, orientation, panelHeight, instanceId);
 
 		try {
-			this.set_applet_icon_name("virtualbox");
+			this.set_applet_icon_name(ICON);
 			
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
 			this.menu = new Applet.AppletPopupMenu(this, orientation);
@@ -44,7 +49,7 @@ MyApplet.prototype = {
 			this.menu.addMenuItem(menuitemVbox);
 			this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 			
-			let [res, out, err, status] = GLib.spawn_command_line_sync("vboxmanage list vms");
+			let [res, out, err, status] = GLib.spawn_command_line_sync(CMD_LIST);
 			
 			if(out.length!=0) {
 				let machines = out.toString().split("\n");
@@ -74,11 +79,11 @@ MyApplet.prototype = {
 	},
 	
 	startVM: function(id) {
-		Main.Util.spawnCommandLine("virtualbox --startvm "+id);
+		Main.Util.spawnCommandLine(CMD_VM + id);
 	},
 	
 	startVbox: function() {
-		Main.Util.spawnCommandLine("virtualbox");
+		Main.Util.spawnCommandLine(CMD);
 	},
 
 	on_applet_clicked: function(event) {
