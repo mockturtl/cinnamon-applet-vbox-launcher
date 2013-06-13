@@ -1,29 +1,32 @@
 const Applet = imports.ui.applet;
-const Cinnamon = imports.gi.Cinnamon;
 const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
-const Mainloop = imports.mainloop;
 const PopupMenu = imports.ui.popupMenu;
-const St = imports.gi.St;
-const Main = imports.ui.main;
-const SettingsFile = GLib.build_filenamev([global.userdatadir, 'applets/vboxlauncher@adec/settings.json']);
+const Settings = imports.ui.settings;
+const Util = imports.misc.util;
 
+const UUID = "vboxlauncher@adec";
 const ICON = "virtualbox";
 const CMD = "virtualbox";
 const CMD_VM = CMD + " --startvm ";
 const CMD_LIST = "vboxmanage list vms";
+const CMD_SETTINGS = "cinnamon-settings applets " + UUID;
+
+const KEY_UPDATE = "autoUpdate";
+const PROP_UPDATE = "_" + KEY_UPDATE;
 
 
 function MyApplet(metadata, orientation, panelHeight, instanceId) {
+	this.settings = new Settings.AppletSettings(this, UUID, instanceId);
 	this._init(orientation, panelHeight, instanceId);
 };
 
 MyApplet.prototype = {
 	__proto__: Applet.IconApplet.prototype,
 
-    _init: function(orientation, panelHeight, instanceId) {
-        Applet.IconApplet.prototype._init.call(this, orientation, panelHeight, instanceId);
+	_init: function(orientation, panelHeight, instanceId) {
+		Applet.IconApplet.prototype._init.call(this, orientation, panelHeight, instanceId);
 
 		try {
 			this.set_applet_icon_name(ICON);
@@ -32,9 +35,16 @@ MyApplet.prototype = {
 			this.menu = new Applet.AppletPopupMenu(this, orientation);
 			this.menuManager.addMenu(this.menu);
 
-			this.loadSettings();
+			this.settings.bindProperty(Settings.BindingDirection.IN, KEY_UPDATE, PROP_UPDATE,
+																 this.onSwitchAutoUpdate, null);
+
+			// context menu
+			let settingsMenuItem = new Applet.MenuItem(_("Settings"), Gtk.STOCK_EDIT, Lang.bind(this, function() {
+				Util.spawnCommandLine(CMD_SETTINGS);
+			}));
+			this._applet_context_menu.addMenuItem(settingsMenuItem);
+
 			this.updateMenu();
-			this.buildContextMenu();
 		}
 		catch (e) {
 			global.logError(e);
@@ -53,7 +63,7 @@ MyApplet.prototype = {
 			
 			if(out.length!=0) {
 				let machines = out.toString().split("\n");
-				for(let i=0; i<machines.length; i++) {
+				for(let i = 0; i < machines.length; i++) {
 					let machine = machines[i];
 					if(machine=="") continue;
 					let info = machine.split('" {');
@@ -70,7 +80,7 @@ MyApplet.prototype = {
 			this.menu.addMenuItem(new PopupMenu.PopupMenuItem("ERROR. Make sure Virtualbox is installed.", { reactive: false }));
 		}
 		
-		if(!this.settings.autoUpdate) {
+		if(!this[PROP_UPDATE]) {
 			this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 			let menuitemUpdate = new PopupMenu.PopupMenuItem("Update list");
 			menuitemUpdate.connect('activate', Lang.bind(this, this.updateMenu));
@@ -79,55 +89,28 @@ MyApplet.prototype = {
 	},
 	
 	startVM: function(id) {
-		Main.Util.spawnCommandLine(CMD_VM + id);
+		Util.spawnCommandLine(CMD_VM + id);
 	},
 	
 	startVbox: function() {
-		Main.Util.spawnCommandLine(CMD);
+		Util.spawnCommandLine(CMD);
 	},
 
 	on_applet_clicked: function(event) {
-		if(this.settings.autoUpdate && !this.menu.isOpen) {
+		if(this[PROP_UPDATE] && !this.menu.isOpen) {
 			this.updateMenu();
 		}
 		this.menu.toggle();
 	},
 	
-	buildContextMenu: function() {
-		this.switchAutoUpdate = new PopupMenu.PopupSwitchMenuItem("Auto update (slow)");
-		this.switchAutoUpdate.setToggleState(this.settings.autoUpdate);
-		this.switchAutoUpdate.connect('toggled', Lang.bind(this, this.onSwitchAutoUpdateClick));
-		this._applet_context_menu.addMenuItem(this.switchAutoUpdate);
-	},
-	
-	onSwitchAutoUpdateClick: function(item) {
-		this.settings.autoUpdate = item.state;
-		if(!item.state) {
+	onSwitchAutoUpdate: function() {
+		if(!this[PROP_UPDATE]) {
 			this.updateMenu(); // Needed to make update button reappear if setting switched to off
 		}
-		this.saveSettings();
-	},
-	
-	loadSettings: function() {
-		try {
-			this.settings = JSON.parse(Cinnamon.get_file_contents_utf8_sync(SettingsFile));
-		} catch(e) {
-			global.logError(e);
-			global.logError("Settings file not found. Using default values.");
-			this.settings = JSON.parse("{\"autoUpdate\":false}");
-		}
-	},
-	
-	saveSettings: function() {
-		let file = Gio.file_new_for_path(SettingsFile);
-		let outputFile = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
-		let out = Gio.BufferedOutputStream.new_sized(outputFile, 1024);
-		Cinnamon.write_string_to_stream(out, JSON.stringify(this.settings));
-		out.close(null);
 	}
+	
 };
 
 function main(metadata, orientation, panelHeight, instanceId) {
-	let myApplet = new MyApplet(metadata, orientation, panelHeight, instanceId);
-	return myApplet;
+	return new MyApplet(metadata, orientation, panelHeight, instanceId);
 }
