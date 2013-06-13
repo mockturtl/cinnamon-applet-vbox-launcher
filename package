@@ -1,0 +1,181 @@
+#!/bin/sh -e
+
+VERSION=$1
+BASEDIR="${HOME}/Desktop"
+TESTDIR="${HOME}/.local/share/cinnamon/applets"
+AUTHOR="mockturtl"
+PACKAGE="vboxlauncher@adec"
+TARGET="${BASEDIR}/${PACKAGE}"
+DEV_BRANCH="master"
+STAGE_BRANCH="staging"
+DEPLOY_BRANCH="master"
+REMOTE="origin"
+MANIFEST="manifest"
+VERSION_FILE="metadata.json"
+GIT_HOST="https://github.com"
+PROJECT="cinnamon-vbox-launcher"
+DEPLOY_URL="${GIT_HOST}/${AUTHOR}/${PROJECT}/zipball/v${VERSION}"
+COMMENTS='/^\s*#/'
+
+if [ -z $VERSION ]; then
+	cat << EOF
+ERROR: You must provide a version number, like:
+	$ ./package 1.2.3
+EOF
+	exit 2
+fi
+
+check_pgp() {
+	if [ -z $GH_KEY_ID ]; then
+		cat << EOF
+Define a GH_KEY_ID variable for signing git tags.
+Typically this is the email address associated with your public PGP key.
+EOF
+		exit 11
+	fi
+}
+
+check_version() {
+	# exit code 1 means no match; see grep(1)
+	set +e
+	grep -q ${VERSION} ${VERSION_FILE}
+	VERSION_MATCH=$?
+	set -e
+
+	# { "JSON": "beware of colons!" }
+	if [ $VERSION_MATCH -ne 0 ]; then
+		cat << EOF
+WARNING: { $(grep version ${VERSION_FILE}) } in ${VERSION_FILE} does not match the package version provided.
+	You may have forgotten to tag this release. (v$VERSION)
+
+EOF
+	fi
+}
+
+validate_version() {
+	check_version
+
+	if [ $VERSION_MATCH -ne 0 ]; then
+		cat << EOF
+ERROR: Invalid version.  Fix ${VERSION_FILE} to push.  You may wish to revert the last commit.
+
+EOF
+		exit 13
+	fi
+}
+
+do_package() {
+	check_version
+
+	rm -rf ${TARGET}*
+	mkdir -p ${TARGET}/
+	# strip comment lines
+	cat ${MANIFEST} | sed -r ${COMMENTS}d | xargs -i cp -r '{}' ${TARGET}
+	rm -rf ${TARGET}/po/*.po~
+
+	cd ${BASEDIR}
+	local zipfile=${PACKAGE}-${VERSION}
+	zip -q -r ${zipfile}.zip ${PACKAGE}
+
+	cat << EOF
+Done.	Release ${VERSION} is ready to publish at:
+	${zipfile}.zip
+
+EOF
+}
+
+do_tag() {
+	check_pgp
+
+	cat << EOF
+Rebasing ${STAGE_BRANCH} onto ${DEV_BRANCH}...
+EOF
+	git checkout ${STAGE_BRANCH}
+	git rebase ${DEV_BRANCH}
+	cat << EOF
+Bumping version (${VERSION}) in ${VERSION_FILE}...
+EOF
+	# major.minor.patch with optional suffix
+	sed -i "s/[0-9]\+\.[0-9]\+\.[0-9]\+[0-9A-Za-z.+~-]*/$VERSION/" ${VERSION_FILE}
+	cat << EOF
+Creating tag...
+EOF
+	git add ${VERSION_FILE}
+	# allow manual version-bump commits; see git-diff(1)
+	git diff --quiet --staged || git commit -m 'bump version'
+	git tag -u ${GH_KEY_ID} v${VERSION}
+	cat << EOF
+Done.  Now run './deploy ${VERSION}' to merge into ${DEPLOY_BRANCH} and push.
+
+EOF
+	git checkout ${DEV_BRANCH}
+}
+
+do_deploy() {
+	git checkout ${DEPLOY_BRANCH}
+	git merge ${STAGE_BRANCH}
+	validate_version
+	git push ${REMOTE} ${DEPLOY_BRANCH}
+	git push --tags
+	cat << EOF
+Your new tag is at ${DEPLOY_URL}.
+
+EOF
+}
+
+do_translate() {
+	LOCALES="$(cat po/LINGUAS)"
+	UUID="$(find po/ -name *.pot | xargs -i basename {} .pot)"
+
+	cat << EOF
+Updating template for ${UUID}...
+EOF
+	# python mode is OK for javascript
+	xgettext -d ${UUID} -o po/${UUID}.pot -L python --keyword=_ applet.js
+
+	cat << EOF
+Merging existing translation files with new template...
+EOF
+	for LOCALE in ${LOCALES}; do
+		msgmerge -U po/${LOCALE}.po po/${UUID}.pot
+	done
+	cat << EOF
+Done.
+EOF
+}
+
+do_test() {
+
+  do_package
+
+cat<<EOF
+  Updating...
+EOF
+
+  rm -rf ${TESTDIR}/${PACKAGE} 2>/dev/null
+  cp -r ${BASEDIR}/${PACKAGE} ${TESTDIR}
+}
+
+case `basename $0` in
+	"tag")
+		do_tag
+		;;
+	"package")
+		do_package
+		;;
+	"test")
+		do_test
+		;;
+	"deploy")
+		do_deploy
+		;;
+	"translate")
+		do_translate
+		;;
+	*)
+		cat << EOF
+Usage: tag | deploy | package | translate | test
+EOF
+		exit 2
+		;;
+esac
