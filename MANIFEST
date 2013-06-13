@@ -1,0 +1,6 @@
+# All files provided in the release are listed here.
+# Lines with a leading hash mark (#) will be stripped.
+applet.js
+metadata.json
+README.md
+settings-schema.json
