@@ -9,34 +9,22 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const SettingsFile = GLib.build_filenamev([global.userdatadir, 'applets/vboxlauncher@adec/settings.json']);
 
-function MyMenu(launcher, orientation) {
-    this._init(launcher, orientation);
-}
-MyMenu.prototype = {
-    __proto__: PopupMenu.PopupMenu.prototype,
-    _init: function(launcher, orientation) {
-        this._launcher = launcher;
-        PopupMenu.PopupMenu.prototype._init.call(this, launcher.actor, 0.0, orientation, 0);
-        Main.uiGroup.add_actor(this.actor);
-        this.actor.hide();
-    }
-}
 
-function MyApplet(orientation) {
-	this._init(orientation);
+function MyApplet(metadata, orientation, panelHeight, instanceId) {
+	this._init(orientation, panelHeight, instanceId);
 };
 
 MyApplet.prototype = {
 	__proto__: Applet.IconApplet.prototype,
 
-    _init: function(orientation) {
-        Applet.IconApplet.prototype._init.call(this, orientation);
+    _init: function(orientation, panelHeight, instanceId) {
+        Applet.IconApplet.prototype._init.call(this, orientation, panelHeight, instanceId);
 
 		try {
 			this.set_applet_icon_name("virtualbox");
 			
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
-			this.menu = new MyMenu(this, orientation);
+			this.menu = new Applet.AppletPopupMenu(this, orientation);
 			this.menuManager.addMenu(this.menu);
 
 			this.loadSettings();
@@ -134,7 +122,7 @@ MyApplet.prototype = {
 	}
 };
 
-function main(metadata, orientation) {
-	let myApplet = new MyApplet(orientation);
+function main(metadata, orientation, panelHeight, instanceId) {
+	let myApplet = new MyApplet(metadata, orientation, panelHeight, instanceId);
 	return myApplet;
 }
