@@ -1,6 +1,7 @@
 {
-"uuid": "vboxlauncher@adec",
+"uuid": "vboxlauncher@mockturtl",
 "name": "Vbox Launcher",
 "description": "An applet to launch virtual machines.",
-"icon": "virtualbox"
+"icon": "virtualbox",
+"version": "0.3.0"
 }

@@ -6,7 +6,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Settings = imports.ui.settings;
 const Util = imports.misc.util;
 
-const UUID = "vboxlauncher@adec";
+const UUID = "vboxlauncher@mockturtl";
 const ICON = "virtualbox";
 const CMD = "virtualbox";
 const CMD_VM = CMD + " --startvm ";
