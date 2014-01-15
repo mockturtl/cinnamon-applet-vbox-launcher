@@ -42,7 +42,7 @@ MyApplet.prototype = {
       // configuration via context menu is automatically provided in Cinnamon 2.0+
       let cinnamonVersion = Config.PACKAGE_VERSION.split('.')
       let majorVersion = parseInt(cinnamonVersion[0])
-      global.log("cinnamonVersion=" + cinnamonVersion +  "; majorVersion=" + majorVersion)
+      //global.log("cinnamonVersion=" + cinnamonVersion +  "; majorVersion=" + majorVersion)
 
       // for Cinnamon 1.x, build a menu item
       if (majorVersion < 2) {
