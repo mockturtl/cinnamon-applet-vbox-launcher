@@ -3,5 +3,5 @@
 "name": "Vbox Launcher",
 "description": "An applet to launch virtual machines.",
 "icon": "virtualbox",
-"version": "0.3.1"
+"version": "0.3.2"
 }
