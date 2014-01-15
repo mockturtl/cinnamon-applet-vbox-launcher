@@ -1,4 +1,5 @@
 const Applet = imports.ui.applet
+const Config = imports.misc.config
 const GLib = imports.gi.GLib
 const Gtk = imports.gi.Gtk
 const Lang = imports.lang
@@ -38,11 +39,18 @@ MyApplet.prototype = {
 			this.settings.bindProperty(Settings.BindingDirection.IN, KEY_UPDATE, PROP_UPDATE,
 																 this.onSwitchAutoUpdate, null)
 
-			// context menu
-			let settingsMenuItem = new Applet.MenuItem(_("Settings"), Gtk.STOCK_EDIT, Lang.bind(this, function() {
-				Util.spawnCommandLine(CMD_SETTINGS)
-			}))
-			this._applet_context_menu.addMenuItem(settingsMenuItem)
+      // configuration via context menu is automatically provided in Cinnamon 2.0+
+      let cinnamonVersion = Config.PACKAGE_VERSION.split('.')
+      let majorVersion = parseInt(cinnamonVersion[0])
+      global.log("cinnamonVersion=" + cinnamonVersion +  "; majorVersion=" + majorVersion)
+
+      // for Cinnamon 1.x, build a menu item
+      if (majorVersion < 2) {
+        let settingsMenuItem = new Applet.MenuItem(_("Settings"), Gtk.STOCK_EDIT, Lang.bind(this, function() {
+          Util.spawnCommandLine(CMD_SETTINGS)
+        }))
+        this._applet_context_menu.addMenuItem(settingsMenuItem)
+      }
 
 			this.updateMenu()
 		}
