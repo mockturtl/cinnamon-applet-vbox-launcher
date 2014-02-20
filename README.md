@@ -1,13 +1,13 @@
-Vbox Launcher applet
+VM Launcher applet
 ====================
 
-Simple Cinnamon applet to launch Virtualbox virtual machines directly from the panel.
+Launch virtual machines directly from the panel.
 
 
 Requirements
 ------------
 
-- Virtualbox
+- Virtualbox or VMware Player
 - [Cinnamon](https://github.com/linuxmint/Cinnamon) 1.8+
 
 For compatibility with Cinnamon 1.7 or earlier, use the [original](https://github.com/andreadec/cinnamon-applet-vbox-launcher) version.
@@ -23,3 +23,4 @@ Authors
 
 * [andreadec](https://github.com/andreadec)
 * [mockturtl](https://github.com/mockturtl)
+* [greed92](https://twitter.com/greed92)
