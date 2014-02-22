@@ -33,7 +33,7 @@ function MyApplet(metadata, orientation, panelHeight, instanceId) {
 MyApplet.prototype = {
   __proto__: Applet.IconApplet.prototype
 
-,  _init: function(orientation, panelHeight, instanceId) {
+, _init: function(orientation, panelHeight, instanceId) {
     Applet.IconApplet.prototype._init.call(this, orientation, panelHeight, instanceId)
 
     try {
@@ -61,7 +61,6 @@ MyApplet.prototype = {
     const SETTINGS_API_MIN_VERSION = 2
     const CMD_SETTINGS = "cinnamon-settings applets " + UUID
 
-
     let cinnamonVersion = Config.PACKAGE_VERSION.split('.')
     let majorVersion = parseInt(cinnamonVersion[0])
     //global.log("cinnamonVersion=" + cinnamonVersion +  "; majorVersion=" + majorVersion)
@@ -76,7 +75,7 @@ MyApplet.prototype = {
     this._applet_context_menu.addMenuItem(mi)
   }
 
-// determine which VM programs are installed
+  // determine which VM programs are installed
 , checkPrograms: function() {
     for (let i = 0; i < PROGRAMS.length; i++) {
       let p = PROGRAMS[i] 
@@ -93,7 +92,7 @@ MyApplet.prototype = {
     }
   }
 
-// check if a command is available, using a bool hash created during init
+  // check if a command is available, using a bool hash created during init
 , isInstalled: function(cmd) {
     return INSTALLED_PROGRAMS[cmd]
   }
@@ -127,7 +126,7 @@ MyApplet.prototype = {
     return 1
   }
 
-// add menu items for all Virtualbox images
+  // add menu items for all Virtualbox images
 , parseVboxImages: function(out) {
     if (!this.isInstalled(CMD_VBOX))
       return
@@ -150,7 +149,7 @@ MyApplet.prototype = {
     this.addLauncher(name, Lang.bind(this, function() { this.startVboxImage(id) }))
   }
 
-// add menu items for all VMWare Player images
+  // add menu items for all VMWare Player images
 , parseVmplayerImages: function(out) {
     if (!this.isInstalled(CMD_VMPLAYER))
       return
@@ -190,7 +189,7 @@ MyApplet.prototype = {
     }
   }
 
-,  updateMenu: function() {
+, updateMenu: function() {
     this.menu.removeAll()
     try {
       this.addLaunchers()
@@ -202,35 +201,35 @@ MyApplet.prototype = {
     this.addUpdater()
   }
   
-,  startVboxImage: function(id) {
+, startVboxImage: function(id) {
     Util.spawnCommandLine(CMD_VBOX_VM + id)
   }
   
-,  startVbox: function() {
+, startVbox: function() {
     Util.spawnCommandLine(CMD_VBOX)
   }
 
-,  startVmplayer: function() {
+, startVmplayer: function() {
     Util.spawnCommandLine(CMD_VMPLAYER)
   }
 
-,  startVmplayerImage: function(path) {
+, startVmplayerImage: function(path) {
     Util.spawnCommandLine(CMD_VMPLAYER + " " + path)
   }
 
-,  on_applet_clicked: function(event) {
+, on_applet_clicked: function(event) {
     if (this[AUTOUPDATE] && !this.menu.isOpen) {
       this.updateMenu()
     }
     this.menu.toggle()
   }
   
-,  onSwitchAutoUpdate: function() {
+, onSwitchAutoUpdate: function() {
     if (!this[AUTOUPDATE]) {
       this.updateMenu() // Needed to make update button reappear if setting switched to off
     }
   }
-  
+
 }
 
 function main(metadata, orientation, panelHeight, instanceId) {
