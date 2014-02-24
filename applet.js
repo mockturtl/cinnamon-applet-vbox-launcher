@@ -127,7 +127,7 @@ MyApplet.prototype = {
   }
 
   // add menu items for all Virtualbox images
-, parseVboxImages: function(out) {
+, parseVboxImages: function() {
     if (!this.isInstalled(CMD_VBOX))
       return
 
@@ -150,7 +150,7 @@ MyApplet.prototype = {
   }
 
   // add menu items for all VMWare Player images
-, parseVmplayerImages: function(out) {
+, parseVmplayerImages: function() {
     if (!this.isInstalled(CMD_VMPLAYER))
       return
 
